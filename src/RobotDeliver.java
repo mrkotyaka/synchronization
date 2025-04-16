@@ -2,8 +2,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RobotDeliver {
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws InterruptedException {
+        List<Thread> threads = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
             Thread thread = new Thread(() -> {
                 String gr = generateRoute("RLRFR", 100);
@@ -23,8 +23,13 @@ public class RobotDeliver {
                     }
                 }
             });
+            threads.add(thread);
             thread.start();
 
+        }
+
+        for (Thread thread : threads) {
+            thread.join();
         }
 
         Map<Integer, Integer> sorted = sizeToFreq.entrySet()
