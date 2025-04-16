@@ -1,35 +1,30 @@
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class RobotDeliver {
     public static void main(String[] args) {
 
-        try (ExecutorService threadPool = Executors.newFixedThreadPool(4)) {
-            for (int i = 0; i < 1000; i++) {
-                synchronized (sizeToFreq) {
-                    Thread thread = new Thread(() -> {
-                        String gr = generateRoute("RLRFR", 100);
+        for (int i = 0; i < 1000; i++) {
+            Thread thread = new Thread(() -> {
+                String gr = generateRoute("RLRFR", 100);
 
-                        int repeatedCountChars = 0;
-                        for (int j = 0; j < gr.length(); j++) {
-                            if (gr.charAt(j) == 'R') {
-                                repeatedCountChars++;
-                            }
-                        }
-
-                        if (sizeToFreq.containsKey(repeatedCountChars)) {
-                            sizeToFreq.put(repeatedCountChars, sizeToFreq.get(repeatedCountChars) + 1);
-                        } else {
-                            sizeToFreq.put(repeatedCountChars, 1);
-                        }
-                    });
-                    threadPool.execute(thread);
+                int repeatedCountChars = 0;
+                for (int j = 0; j < gr.length(); j++) {
+                    if (gr.charAt(j) == 'R') {
+                        repeatedCountChars++;
+                    }
                 }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+                synchronized (sizeToFreq) {
+                    if (sizeToFreq.containsKey(repeatedCountChars)) {
+                        sizeToFreq.put(repeatedCountChars, sizeToFreq.get(repeatedCountChars) + 1);
+                    } else {
+                        sizeToFreq.put(repeatedCountChars, 1);
+                    }
+                }
+            });
+            thread.start();
+
         }
 
         Map<Integer, Integer> sorted = sizeToFreq.entrySet()
