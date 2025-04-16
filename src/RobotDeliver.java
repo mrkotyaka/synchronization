@@ -1,9 +1,23 @@
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class RobotDeliver {
     public static void main(String[] args) throws InterruptedException {
-        List<Thread> threads = new ArrayList<>();
+
+        Thread threadLeader = new Thread(() -> {
+            while (!Thread.interrupted()) {
+                synchronized (sizeToFreq) {
+                    try {
+                        sizeToFreq.wait();
+                    } catch (InterruptedException ignored) {
+                    }
+                    Optional<Map.Entry<Integer, Integer>> leader = sizeToFreq.entrySet().stream().max(Map.Entry.comparingByValue());
+
+                    System.out.println("Лидер сейчас: " + leader.get().getKey() + " (встретилось " + leader.get().getValue() + " раз)");
+                }
+            }
+        });
+        threadLeader.start();
+
         for (int i = 0; i < 1000; i++) {
             Thread thread = new Thread(() -> {
                 String gr = generateRoute("RLRFR", 100);
@@ -21,34 +35,14 @@ public class RobotDeliver {
                     } else {
                         sizeToFreq.put(repeatedCountChars, 1);
                     }
+                    sizeToFreq.notify();
                 }
             });
-            threads.add(thread);
             thread.start();
-
-        }
-
-        for (Thread thread : threads) {
             thread.join();
         }
 
-        Map<Integer, Integer> sorted = sizeToFreq.entrySet()
-                .stream()
-                .sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey, Map.Entry::getValue,
-                        (e1, e2) -> e1, LinkedHashMap::new));
-
-        int i = 0;
-        for (Map.Entry<Integer, Integer> entry : sorted.entrySet()) {
-            if (i == 0) {
-                System.out.println("Самое частое количество повторений " + entry.getKey() + " (встретилось " + entry.getValue() + " раз)");
-                System.out.println("Другие размеры:");
-                i++;
-            } else {
-                System.out.println("- " + entry.getKey() + " (" + entry.getValue() + " раз)");
-            }
-        }
+        threadLeader.interrupt();
     }
 
     public static String generateRoute(String letters, int length) {
@@ -61,5 +55,4 @@ public class RobotDeliver {
     }
 
     public static final Map<Integer, Integer> sizeToFreq = new HashMap<>();
-
 }
