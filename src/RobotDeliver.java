@@ -1,18 +1,20 @@
 import java.util.*;
 
 public class RobotDeliver {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
 
         Thread threadLeader = new Thread(() -> {
             while (!Thread.interrupted()) {
                 synchronized (sizeToFreq) {
                     try {
                         sizeToFreq.wait();
-                    } catch (InterruptedException ignored) {
+                    } catch (InterruptedException e) {
+                        return;
                     }
-                    Optional<Map.Entry<Integer, Integer>> leader = sizeToFreq.entrySet().stream().max(Map.Entry.comparingByValue());
 
-                    System.out.println("Лидер сейчас: " + leader.get().getKey() + " (встретилось " + leader.get().getValue() + " раз)");
+                    System.out.println("Лидер сейчас: " +
+                            sizeToFreq.entrySet().stream().max(Map.Entry.comparingByValue()).orElseThrow().getKey() + " (встретилось " +
+                            sizeToFreq.entrySet().stream().max(Map.Entry.comparingByValue()).orElseThrow().getValue() + " раз)");
                 }
             }
         });
@@ -39,7 +41,6 @@ public class RobotDeliver {
                 }
             });
             thread.start();
-            thread.join();
         }
 
         threadLeader.interrupt();
